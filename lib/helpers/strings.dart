@@ -1,0 +1,1 @@
+String MsgErrorServer = "Ooppss.. Something went wrong, please make sure your internet connection !";
