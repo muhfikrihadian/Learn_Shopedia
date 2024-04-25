@@ -15,58 +15,55 @@ import 'detail_product_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   @override
-  State<ProductsScreen> createState() => _CategoryScreenState();
+  State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
-class _CategoryScreenState extends State<ProductsScreen> {
+class _ProductsScreenState extends State<ProductsScreen> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_scrollListener);
+    Provider.of<ProductProvider>(context, listen: false).getProducts();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      Provider.of<ProductProvider>(context, listen: false).getProducts();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final productProvider = Provider.of<ProductProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Text("Products"),
       ),
       body: SafeArea(
-        child: Container(
-          child: Column(
-            children: [
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(left: 20, right: 20, bottom: 30),
-                  child: Consumer<ProductProvider>(
-                    builder: (context, provider, child) {
-                      return FutureBuilder<void>(
-                        future: provider.getProductsAll(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return LoadingScreen();
-                          } else if (snapshot.hasError) {
-                            return MessageScreen(message: MsgErrorServer);
-                          } else {
-                            return GridView.builder(
-                              itemCount:
-                                  (provider.dataProductsAll.length / 2).ceil(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
-                              ),
-                              itemBuilder: (context, i) {
-                                return ChildProduct(
-                                    provider.dataProductsAll[i]);
-                              },
-                            );
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+        child: Padding(
+          padding: EdgeInsets.only(left: 20, right: 20),
+          child: productProvider.isLoading ? Center(child: LoadingScreen(),) : GridView.builder(
+            controller: _scrollController,
+            itemCount: productProvider.dataProducts.length,
+            gridDelegate:
+            SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (context, i) {
+              return ChildProduct(productProvider.dataProducts[i]);
+            },
           ),
-        ),
+        )
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: ColorPrimary,

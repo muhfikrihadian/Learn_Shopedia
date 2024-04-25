@@ -222,8 +222,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                           return MessageScreen(message: MsgErrorServer);
                         } else {
                           return GridView.builder(
-                            itemCount:
-                                (provider.dataProductsCat.length / 2).ceil(),
+                            itemCount: provider.dataProductsCat.length,
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,

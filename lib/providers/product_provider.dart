@@ -5,9 +5,6 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ProductProvider extends ChangeNotifier {
-  List<ProductModel> _productsAll = [];
-
-  List<ProductModel> get dataProductsAll => _productsAll;
   List<ProductModel> _products = [];
 
   List<ProductModel> get dataProducts => _products;
@@ -21,34 +18,46 @@ class ProductProvider extends ChangeNotifier {
 
   ProductModel get dataDetailProduct => _detailProduct;
 
-  Future<List<ProductModel>> getProducts() async {
-    final url = "https://dummyjson.com/products";
+  int _pageSkip = 0;
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+  bool _isBreak = false;
+  bool get isBreak => _isBreak;
+
+  Future<List<ProductModel>> fetchProducts() async {
+    final url = "https://dummyjson.com/products?limit=10&skip=" + _pageSkip.toString();
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      print("RespProducts" + response.body);
       final result = json.decode(response.body)['products'].cast<Map<String, dynamic>>();
-      _products = result.map<ProductModel>((json) => ProductModel.fromJson(json)).toList();
-      return _products;
+      List<ProductModel> _newProducts = result.map<ProductModel>((json) => ProductModel.fromJson(json)).toList();
+      return _newProducts;
     } else {
       throw Exception();
     }
   }
 
-  Future<List<ProductModel>> getProductsAll() async {
-    final url = 'https://dummyjson.com/products?limit=0';
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      print("RespProductsAll" + response.body);
-      final result =
-          json.decode(response.body)['products'].cast<Map<String, dynamic>>();
-      _productsAll = result
-          .map<ProductModel>((json) => ProductModel.fromJson(json))
-          .toList();
-      return _productsAll;
-    } else {
+  Future<void> getProducts() async {
+    try {
+      if (_isBreak == false) {
+        if (_isLoading == false) {
+          _isLoading = true;
+          final List<ProductModel> fetchedProducts = await fetchProducts();
+          if(fetchedProducts.length == 0){
+            _isBreak = true;
+          }
+          _pageSkip += fetchedProducts.length;
+          print("FetchLength" + fetchedProducts.length.toString());
+          print("PageSkip" + _pageSkip.toString());
+          _products.addAll(fetchedProducts);
+          _isLoading = false;
+          notifyListeners();
+        }
+      }
+    } catch (e) {
       throw Exception();
     }
   }
+
 
   Future<List<ProductModel>> getProductsByCategory(String category) async {
     final url = 'https://dummyjson.com/products/category/' + category;

@@ -46,7 +46,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             return MessageScreen(message: MsgErrorServer);
                           } else {
                             return GridView.builder(
-                              itemCount: (provider.dataProductsSearch.length / 2).ceil(),
+                              itemCount: provider.dataProductsSearch.length,
                               gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,

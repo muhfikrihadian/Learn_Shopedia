@@ -24,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   List<String> listCatTags = [
     "smartphones",
@@ -93,19 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
     "ic_women_jewellery.png"
   ];
 
-  void _scrollListener() {
-    // if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-    //   Provider.of<ProductProvider>(context, listen: false).setEndReached(true);
-    //   Provider.of<ProductProvider>(context, listen: false).getProducts();
-    // } else {
-    //   Provider.of<ProductProvider>(context, listen: false).setEndReached(false);
-    // }
-  }
-
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_scrollListener);
+    Provider.of<ProductProvider>(context, listen: false).getProducts();
   }
 
   @override
@@ -114,8 +106,15 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  void _scrollListener() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      Provider.of<ProductProvider>(context, listen: false).getProducts();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final productProvider = Provider.of<ProductProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: Container(
@@ -278,34 +277,17 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: Container(
                   margin: EdgeInsets.only(left: 20, right: 20),
-                  child: Consumer<ProductProvider>(
-                    builder: (context, provider, child) {
-                      return FutureBuilder<void>(
-                        future: provider.getProducts(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return LoadingScreen();
-                          } else if (snapshot.hasError) {
-                            return MessageScreen(message: MsgErrorServer);
-                          } else {
-                            return GridView.builder(
-                              controller: _scrollController,
-                              itemCount:
-                                  (provider.dataProducts.length / 2).ceil(),
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 8,
-                                mainAxisSpacing: 8,
-                              ),
-                              itemBuilder: (context, i) {
-                                return ChildProduct(provider.dataProducts[i]);
-                              },
-                            );
-                          }
-                        },
-                      );
+                  child: productProvider.isLoading ? Center(child: LoadingScreen(),) : GridView.builder(
+                    controller: _scrollController,
+                    itemCount: productProvider.dataProducts.length,
+                    gridDelegate:
+                    SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                    ),
+                    itemBuilder: (context, i) {
+                      return ChildProduct(productProvider.dataProducts[i]);
                     },
                   ),
                 ),
